@@ -155,6 +155,8 @@ import com.junkfood.seal.util.DatabaseUtil
 import com.junkfood.seal.util.DownloadUtil
 import com.junkfood.seal.util.FileUtil
 import com.junkfood.seal.util.GalleryDlStore
+import com.junkfood.seal.util.GalleryDlBehaviorPreference
+import com.junkfood.seal.util.InstagramProfileRouting
 import com.junkfood.seal.util.HOME_RECENT_LIMIT
 import com.junkfood.seal.util.HOME_TRANSFER_DETAILS
 import com.junkfood.seal.util.HOME_INPUT_ANIMATION
@@ -921,6 +923,13 @@ fun NewHomePage(
                     onDownloadClick = {
                         val resolvedUrl = resolveFirstUrlFromInput(urlText)
                         when {
+                            resolvedUrl != null && InstagramProfileRouting.isProfileUrl(resolvedUrl) -> {
+                                view.slightHapticFeedback()
+                                GalleryDlBehaviorPreference.setPendingHomeUrl(resolvedUrl)
+                                urlText = ""
+                                keyboardController?.hide()
+                                onNavigateToGalleryDl()
+                            }
                             resolvedUrl != null -> {
                                 view.slightHapticFeedback()
                                 dialogViewModel.postAction(Action.ShowSheet(listOf(resolvedUrl)))
