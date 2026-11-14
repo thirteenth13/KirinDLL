@@ -83,6 +83,7 @@ import com.junkfood.seal.ui.component.BackButton
 import com.junkfood.seal.util.GalleryDlBehaviorPreference
 import com.junkfood.seal.util.GalleryDlRunner
 import com.junkfood.seal.util.InstagramPostSelection
+import com.junkfood.seal.util.InstagramProfileRouting
 import com.junkfood.seal.util.GalleryDlThemePreference
 import com.junkfood.seal.util.GalleryDlThemeStyle
 import com.junkfood.seal.util.SavedSourcesEngine
@@ -700,6 +701,36 @@ private fun GalleryDownloadTab(
             }
         }
 
+        if (InstagramProfileRouting.isProfileUrl(state.url)) {
+            val instaloaderActive = state.preflightInfo?.className == "InstaloaderProfile"
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = colors.panel,
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text("Instagram · Instaloader", color = colors.text, fontWeight = FontWeight.Bold)
+                    Text(
+                        when {
+                            instaloaderActive -> "Instaloader active · ${state.preflightInfo?.previewItems?.size ?: 0} posts previewed"
+                            state.isCheckingExtractor -> "Checking Instagram profile with Instaloader…"
+                            state.preflightInfo != null -> "Gallery DL fallback active · Instaloader preview unavailable"
+                            else -> "Tap Check to load posts with Instaloader. Gallery DL remains the fallback."
+                        },
+                        color = colors.muted,
+                        fontSize = 12.sp,
+                    )
+                    Text(
+                        "Preview only: selected downloads still use Gallery DL. Instaloader login is not configured.",
+                        color = colors.muted,
+                        fontSize = 11.sp,
+                    )
+                }
+            }
+        }
+
         val instagramPosts = state.preflightInfo?.previewItems.orEmpty()
             .filter { InstagramPostSelection.canonicalPostUrl(it.url) != null }
             .distinctBy { InstagramPostSelection.canonicalPostUrl(it.url) }
@@ -746,7 +777,7 @@ private fun GalleryDownloadTab(
             Button(onClick = onQueueSelectedPosts, enabled = selectedPostUrls.isNotEmpty()) {
                 Text("Queue selected (${selectedPostUrls.size})")
             }
-            Text("Only posts returned by the current gallery-dl preview are shown.", color = colors.muted, fontSize = 11.sp)
+            Text("Only posts returned by the current preview are shown.", color = colors.muted, fontSize = 11.sp)
         }
 
         GalleryStatusStrip(state = state, colors = colors)
