@@ -92,6 +92,30 @@ object GalleryDlRunner {
                         throw IllegalArgumentException("Enter a valid gallery-dl URL")
                     }
 
+                    if (InstagramProfileRouting.isProfileUrl(trimmedUrl)) {
+                        val rawPreview = getInstaloaderBridge(context)
+                            .callAttr("preview_profile", trimmedUrl, 36, "")
+                            .toString()
+                        val preview = JSONObject(rawPreview)
+                        if (preview.optBoolean("ok", false)) {
+                            val items = parsePreviewItems(preview.optJSONArray("items"))
+                            return@runCatching ExtractorInfo(
+                                supported = true,
+                                baseCategory = "instagram",
+                                category = "instagram",
+                                subcategory = "user",
+                                className = "InstaloaderProfile",
+                                title = preview.optString("username"),
+                                author = preview.optString("username"),
+                                isCollection = true,
+                                scannedItemCount = items.size,
+                                previewItems = items,
+                                preflightStatus = "ready",
+                            )
+                        }
+                        // Keep the gallery-dl path available when Instaloader is blocked.
+                    }
+
                     val installedVersion =
                         GalleryDlEngine.installedVersion(context)
                             ?: throw IllegalStateException("Install the gallery-dl engine first")
@@ -411,6 +435,13 @@ object GalleryDlRunner {
                 }
             else -> files
         }
+
+    private fun getInstaloaderBridge(context: Context): com.chaquo.python.PyObject {
+        if (!Python.isStarted()) {
+            Python.start(AndroidPlatform(context.applicationContext))
+        }
+        return Python.getInstance().getModule("instaloader_bridge")
+    }
 
     private fun getBridge(context: Context): com.chaquo.python.PyObject {
         if (!Python.isStarted()) {
