@@ -178,9 +178,9 @@ def diagnostics(engine_dir):
         )
 
 
-_PREVIEW_SCAN_LIMIT = 40
+_PREVIEW_SCAN_LIMIT = 72
 _LARGE_GALLERY_THRESHOLD = 30
-_QUEUE_PREVIEW_PROBE_LIMIT = 24
+_QUEUE_PREVIEW_PROBE_LIMIT = 12
 _QUEUE_CHILD_MESSAGE_LIMIT = 14
 _IMAGE_EXTENSIONS = {
     "jpg", "jpeg", "png", "gif", "webp", "avif", "bmp", "tif", "tiff", "heic",
@@ -470,7 +470,7 @@ def inspect_url(
                         media_kinds.add("other")
 
                     target_url = str(target or "")
-                    if target_url.startswith(("https://", "http://")) and len(preview_items) < 24:
+                    if target_url.startswith(("https://", "http://")) and len(preview_items) < 60:
                         item_data = data if isinstance(data, dict) else {}
                         item_title = _pick_text(
                             item_data,
@@ -511,7 +511,7 @@ def inspect_url(
                     if (
                         target_url.startswith(("https://", "http://"))
                         and target_url not in queued_preview_urls
-                        and len(queued_preview_items) < 24
+                        and len(queued_preview_items) < 60
                     ):
                         item_data = data if isinstance(data, dict) else {}
                         item_title = _pick_text(
@@ -563,7 +563,7 @@ def inspect_url(
         # feeds can show a real preview thumbnail instead of a large empty card.
         if not preview_items and queued_preview_items:
             enriched = []
-            for index, item in enumerate(queued_preview_items[:24]):
+            for index, item in enumerate(queued_preview_items[:60]):
                 if index < _QUEUE_PREVIEW_PROBE_LIMIT and (
                     not item.get("thumbnail") or _generic_preview_title(item.get("title"))
                 ):
