@@ -23,6 +23,10 @@ All notable changes (starting from v1.7.3) to stable releases will be documented
 
 ### ✦ Recent changes
 
+- ui: show Instaloader profile preview status and gallery fallback explicitly (`c5768ca9`)
+- ci: stage and verify arm64-v8a APK instead of universal APK (`16b4a328`)
+- ci: stage and verify arm64-v8a APK instead of universal APK (`a7f24756`)
+- build: restrict native Android packages to arm64-v8a only (`7ccbe36d`)
 - feat(instagram): use Instaloader for profile preflight with gallery-dl fallback (`21c5b3cd`)
 - feat(instagram): add bounded Instaloader profile preview bridge (`1267fddd`)
 - build: bundle Instaloader as optional Instagram engine via Chaquopy (`e959e13b`)
