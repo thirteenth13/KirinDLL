@@ -111,14 +111,14 @@ jobs:
             "-PkirinPrereleaseSuffix=$PRERELEASE_SUFFIX" \
             --stacktrace --no-daemon --no-configuration-cache
 
-      - name: Locate Universal Pre-Release APK
+      - name: Locate ARM64 Pre-Release APK
         shell: bash
         run: |
           set -euo pipefail
 
-          PRERELEASE_APK="$(find app/build/outputs/apk/generic/prerelease -type f -name '*universal*.apk' | head -n 1)"
+          PRERELEASE_APK="$(find app/build/outputs/apk/generic/prerelease -type f -name '*arm64-v8a*.apk' | head -n 1)"
           [[ -n "$PRERELEASE_APK" ]] || {
-            echo "::error::Universal Kirin Pre-Release APK was not generated."
+            echo "::error::ARM64 Kirin Pre-Release APK was not generated."
             exit 1
           }
 
