@@ -212,14 +212,14 @@ jobs:
       - name: Build Stable Test
         run: ./gradlew assembleGenericRelease --stacktrace --no-daemon --no-configuration-cache
 
-      - name: Prepare Universal Stable Test APK
+      - name: Prepare ARM64 Stable Test APK
         shell: bash
         run: |
           set -euo pipefail
           APK_DIR="app/build/outputs/apk/generic/release"
-          UNIVERSAL_APK="$(find "$APK_DIR" -type f -name '*universal*.apk' | head -n 1)"
+          ARM64_APK="$(find "$APK_DIR" -type f -name '*arm64-v8a*.apk' | head -n 1)"
           [[ -n "$UNIVERSAL_APK" ]] || {
-            echo "::error::Universal Stable Test APK was not generated."
+            echo "::error::ARM64 Stable Test APK was not generated."
             exit 1
           }
 
