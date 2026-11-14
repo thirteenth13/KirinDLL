@@ -23,6 +23,8 @@ All notable changes (starting from v1.7.3) to stable releases will be documented
 
 ### ✦ Recent changes
 
+- ci: sign prerelease consistently and increase Android versionCode on each run (`32553ed5`)
+- build: sign debug with shared key when available and increment prerelease versionCode (`58672694`)
 - ui: show Instaloader profile preview status and gallery fallback explicitly (`c5768ca9`)
 - ci: stage and verify arm64-v8a APK instead of universal APK (`16b4a328`)
 - ci: stage and verify arm64-v8a APK instead of universal APK (`a7f24756`)
