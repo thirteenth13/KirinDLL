@@ -109,6 +109,7 @@ jobs:
           PRERELEASE_SUFFIX="-${DEV_TAG##*-}"
           ./gradlew assembleGenericPrerelease \
             "-PkirinPrereleaseSuffix=$PRERELEASE_SUFFIX" \
+            "-PkirinPrereleaseBuildIncrement=${{ github.run_number }}" \
             --stacktrace --no-daemon --no-configuration-cache
 
       - name: Locate ARM64 Pre-Release APK
@@ -139,6 +140,7 @@ jobs:
           BADGING="$("$AAPT" dump badging "$APK")"
 
           PACKAGE_ID="$(printf '%s\n' "$BADGING" | sed -n "s/package: name='\([^']*\)'.*/\1/p" | head -n 1)"
+          VERSION_CODE="$(printf '%s\n' "$BADGING" | sed -n "s/.*versionCode=\'\([^\']*\)\'.*/\1/p" | head -n 1)"
           VERSION_NAME="$(printf '%s\n' "$BADGING" | sed -n "s/.*versionName='\([^']*\)'.*/\1/p" | head -n 1)"
           APP_LABEL="$(printf '%s\n' "$BADGING" | sed -n "s/application-label:'\([^']*\)'.*/\1/p" | head -n 1)"
           EXPECTED_SUFFIX="-${DEV_TAG##*-}"
@@ -159,6 +161,12 @@ jobs:
             exit 1
           fi
 
+          EXPECTED_CODE=$((302020402 + ${{ github.run_number }}))
+          if [[ "$VERSION_CODE" != "$EXPECTED_CODE" ]]; then
+            echo "::error::Wrong versionCode: $VERSION_CODE; expected $EXPECTED_CODE"
+            exit 1
+          fi
+          echo "Verified versionCode: $VERSION_CODE"
           echo "Verified package: $PACKAGE_ID"
           echo "Verified version: $VERSION_NAME"
           echo "Verified label: $APP_LABEL"
