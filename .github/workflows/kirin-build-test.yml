@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       dev_tag:
-        description: "Pre-release tag (example: v3.1.8-devpatch24)"
+        description: "Pre-release tag (example: v3.2.2-devpatch24)"
         required: true
-        default: "v3.1.8-devpatch24"
+        default: "v3.2.2-devpatch24"
         type: string
       update_notes:
         description: "Short note describing what is being tested in this development snapshot"
@@ -64,7 +64,7 @@ jobs:
           set -euo pipefail
 
           if [[ ! "$DEV_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-devpatch[0-9]+$ ]]; then
-            echo "::error::Invalid pre-release tag '$DEV_TAG'. Expected format: v3.1.8-devpatch24"
+            echo "::error::Invalid pre-release tag '$DEV_TAG'. Expected format: v3.2.2-devpatch24"
             exit 1
           fi
 
@@ -141,15 +141,16 @@ jobs:
           PACKAGE_ID="$(printf '%s\n' "$BADGING" | sed -n "s/package: name='\([^']*\)'.*/\1/p" | head -n 1)"
           VERSION_NAME="$(printf '%s\n' "$BADGING" | sed -n "s/.*versionName='\([^']*\)'.*/\1/p" | head -n 1)"
           APP_LABEL="$(printf '%s\n' "$BADGING" | sed -n "s/application-label:'\([^']*\)'.*/\1/p" | head -n 1)"
-          EXPECTED_VERSION="${DEV_TAG#v}"
+          EXPECTED_SUFFIX="-${DEV_TAG##*-}"
+          EXPECTED_VERSION_PATTERN="^[0-9]+\\.[0-9]+\\.[0-9]+${EXPECTED_SUFFIX}$"
 
           if [[ "$PACKAGE_ID" != "com.kirin.downloader.prerelease" ]]; then
             echo "::error::Wrong package id: '$PACKAGE_ID'. Expected com.kirin.downloader.prerelease"
             exit 1
           fi
 
-          if [[ "$VERSION_NAME" != "$EXPECTED_VERSION" ]]; then
-            echo "::error::Wrong version name: '$VERSION_NAME'. Expected '$EXPECTED_VERSION'"
+          if [[ ! "$VERSION_NAME" =~ $EXPECTED_VERSION_PATTERN ]]; then
+            echo "::error::Wrong version name: '$VERSION_NAME'. Expected a semantic version ending in '$EXPECTED_SUFFIX'"
             exit 1
           fi
 
