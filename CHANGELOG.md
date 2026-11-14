@@ -23,6 +23,9 @@ All notable changes (starting from v1.7.3) to stable releases will be documented
 
 ### ✦ Recent changes
 
+- test(instagram): verify profile routing excludes posts and unsafe URLs (`7c11a066`)
+- feat(instagram): classify profile URLs for gallery routing (`aa050c71`)
+- feat(instagram): route profile URLs from Home to gallery-dl instead of broken yt-dlp (`a17f9b5b`)
 - feat(instagram): map gallery media previews to selectable post permalinks (`a8e1d883`)
 - ci: validate prerelease APK suffix against tag without stale base version (`d4bdfc89`)
 - ci: use configured ANDROID signing secrets for release workflows (`5f40cbd8`)
