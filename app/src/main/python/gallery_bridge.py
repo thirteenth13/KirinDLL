@@ -249,6 +249,20 @@ def _extension_from(url, data):
     return name.rsplit(".", 1)[-1].lower()
 
 
+def _instagram_permalink(data):
+    """Return a selectable post URL when gallery-dl yields a CDN media URL.
+
+    Only known Instagram shortcode fields are used. Numeric media IDs are not
+    interchangeable with shortcodes and must not be guessed.
+    """
+    if not isinstance(data, dict):
+        return ""
+    code = _pick_text(data, ("shortcode", "short_code", "post_shortcode"))
+    if not code or not all(c.isalnum() and c.isascii() or c in "_-" for c in code):
+        return ""
+    return "https://www.instagram.com/p/%s/" % code
+
+
 def _classify_preflight_error(exc):
     text = ("%s: %s" % (type(exc).__name__, str(exc))).lower()
     if "429" in text or "rate limit" in text or "too many requests" in text:
@@ -470,8 +484,11 @@ def inspect_url(
                         media_kinds.add("other")
 
                     target_url = str(target or "")
+                    item_data = data if isinstance(data, dict) else {}
+                    selectable_url = (
+                        _instagram_permalink(item_data) if info["category"] == "instagram" else ""
+                    ) or target_url
                     if target_url.startswith(("https://", "http://")) and len(preview_items) < 60:
-                        item_data = data if isinstance(data, dict) else {}
                         item_title = _pick_text(
                             item_data,
                             ("title", "post_title", "filename", "name", "id"),
@@ -494,7 +511,7 @@ def inspect_url(
                             {
                                 "id": str(item_data.get("id") or target_url),
                                 "title": item_title or ("Media %d" % len(preview_items)),
-                                "url": target_url,
+                                "url": selectable_url,
                                 "thumbnail": item_thumb,
                                 "creator": item_creator,
                             }
