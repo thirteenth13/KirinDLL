@@ -23,6 +23,7 @@ All notable changes (starting from v1.7.3) to stable releases will be documented
 
 ### ✦ Recent changes
 
+- ci: validate prerelease APK suffix against tag without stale base version (`d4bdfc89`)
 - ci: use configured ANDROID signing secrets for release workflows (`5f40cbd8`)
 - ci: use configured ANDROID signing secrets for release workflows (`23c85813`)
 - ci: build and test main pushes; upload debug APK artifact (`be6aa25e`)
