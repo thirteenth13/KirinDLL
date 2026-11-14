@@ -23,6 +23,9 @@ All notable changes (starting from v1.7.3) to stable releases will be documented
 
 ### ✦ Recent changes
 
+- feat(instagram): use Instaloader for profile preflight with gallery-dl fallback (`21c5b3cd`)
+- feat(instagram): add bounded Instaloader profile preview bridge (`1267fddd`)
+- build: bundle Instaloader as optional Instagram engine via Chaquopy (`e959e13b`)
 - test(instagram): verify profile routing excludes posts and unsafe URLs (`7c11a066`)
 - feat(instagram): classify profile URLs for gallery routing (`aa050c71`)
 - feat(instagram): route profile URLs from Home to gallery-dl instead of broken yt-dlp (`a17f9b5b`)
