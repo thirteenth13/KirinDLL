@@ -23,6 +23,7 @@ val abiCodes = mapOf("armeabi-v7a" to 1, "arm64-v8a" to 2, "x86" to 3, "x86_64" 
 
 val baseVersionName = currentVersion.name
 val currentVersionCode = currentVersion.code.toInt()
+val prereleaseBuildIncrement = providers.gradleProperty("kirinPrereleaseBuildIncrement").orNull?.toIntOrNull()?.coerceIn(0, 500_000) ?: 0
 val youtubedlAndroidRuntimeVersion = libs.versions.youtubedlAndroid.get()
 val pythonRuntimeVersion = "3.11"
 
@@ -119,7 +120,8 @@ android {
                 val baseAbiCode = abiCodes[name]
 
                 if (baseAbiCode != null) {
-                    output.versionCode.set(baseAbiCode + (output.versionCode.get() ?: 0))
+                    val increment = if (variant.buildType == "prerelease") prereleaseBuildIncrement else 0
+                    output.versionCode.set(baseAbiCode + (output.versionCode.get() ?: 0) + increment)
                 }
 
                 output.outputFileName.set(
@@ -144,7 +146,7 @@ android {
         }
 
         debug {
-            signingConfig = signingConfigs.getByName("kirinDebug")
+            signingConfig = if (keystorePropertiesFile.exists()) signingConfigs.getByName("githubPublish") else signingConfigs.getByName("kirinDebug")
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
         }
