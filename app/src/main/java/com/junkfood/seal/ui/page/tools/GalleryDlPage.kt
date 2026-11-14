@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -81,6 +83,7 @@ import coil3.compose.AsyncImage
 import com.junkfood.seal.ui.component.BackButton
 import com.junkfood.seal.util.GalleryDlBehaviorPreference
 import com.junkfood.seal.util.GalleryDlRunner
+import com.junkfood.seal.util.InstagramPostSelection
 import com.junkfood.seal.util.GalleryDlThemePreference
 import com.junkfood.seal.util.GalleryDlThemeStyle
 import com.junkfood.seal.util.SavedSourcesEngine
@@ -176,6 +179,7 @@ fun GalleryDlPage(
     val colors = kirinGalleryColors(themeStyle, customAccent)
     val clipboard = LocalClipboardManager.current
 
+    var selectedPostUrls by remember { mutableStateOf(emptySet<String>()) }
     var selectedTab by rememberSaveable {
         mutableIntStateOf(GalleryDlBehaviorPreference.lastTab())
     }
@@ -312,6 +316,16 @@ fun GalleryDlPage(
                             }
                         },
                         onBatch = { showBatchDialog = true },
+                        selectedPostUrls = selectedPostUrls,
+                        onTogglePost = { selectedPostUrls = InstagramPostSelection.toggle(selectedPostUrls, it) },
+                        onSelectAllPosts = { urls -> selectedPostUrls = InstagramPostSelection.selectAll(urls) },
+                        onClearPostSelection = { selectedPostUrls = emptySet() },
+                        onQueueSelectedPosts = {
+                            viewModel.addBatch(InstagramPostSelection.queueUrls(selectedPostUrls).joinToString("\n"))
+                            selectedPostUrls = emptySet()
+                            selectedTab = 1
+                            GalleryDlBehaviorPreference.setLastTab(1)
+                        },
                         exportFilter = effectiveExportFilter,
                         siteLabel = gallerySiteLabel,
                         siteFilterSaved = siteExportFilter != null,
@@ -580,6 +594,11 @@ private fun GalleryDownloadTab(
     onDownload: () -> Unit,
     onQueue: () -> Unit,
     onBatch: () -> Unit,
+    selectedPostUrls: Set<String>,
+    onTogglePost: (String) -> Unit,
+    onSelectAllPosts: (List<String>) -> Unit,
+    onClearPostSelection: () -> Unit,
+    onQueueSelectedPosts: () -> Unit,
     exportFilter: Int,
     siteLabel: String?,
     siteFilterSaved: Boolean,
@@ -679,6 +698,55 @@ private fun GalleryDownloadTab(
                         )
                     }
             }
+        }
+
+        val instagramPosts = state.preflightInfo?.previewItems.orEmpty()
+            .filter { InstagramPostSelection.canonicalPostUrl(it.url) != null }
+            .distinctBy { InstagramPostSelection.canonicalPostUrl(it.url) }
+        if (instagramPosts.isNotEmpty()) {
+            Text("Select Instagram posts", color = colors.text, fontWeight = FontWeight.Bold)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = { onSelectAllPosts(instagramPosts.map { it.url }) }) {
+                    Text("Select shown")
+                }
+                OutlinedButton(onClick = onClearPostSelection, enabled = selectedPostUrls.isNotEmpty()) {
+                    Text("Clear")
+                }
+            }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                instagramPosts.forEach { post ->
+                    val canonical = InstagramPostSelection.canonicalPostUrl(post.url) ?: return@forEach
+                    val selected = canonical in selectedPostUrls
+                    Surface(
+                        modifier = Modifier.width(104.dp).clickable { onTogglePost(canonical) },
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (selected) colors.accentSoft else colors.panel,
+                    ) {
+                        Column {
+                            if (post.thumbnailUrl.isNotBlank()) {
+                                AsyncImage(
+                                    model = post.thumbnailUrl,
+                                    contentDescription = post.title,
+                                    modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+                                    contentScale = ContentScale.Crop,
+                                )
+                            }
+                            Text(
+                                (if (selected) "☑ " else "☐ ") + post.title.ifBlank { canonical.substringAfterLast("/p/").take(20) },
+                                modifier = Modifier.padding(6.dp),
+                                color = colors.text,
+                                maxLines = 2,
+                                fontSize = 11.sp,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                }
+            }
+            Button(onClick = onQueueSelectedPosts, enabled = selectedPostUrls.isNotEmpty()) {
+                Text("Queue selected (${selectedPostUrls.size})")
+            }
+            Text("Only posts returned by the current gallery-dl preview are shown.", color = colors.muted, fontSize = 11.sp)
         }
 
         GalleryStatusStrip(state = state, colors = colors)
