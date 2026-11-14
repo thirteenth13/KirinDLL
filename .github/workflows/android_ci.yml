@@ -1,6 +1,17 @@
 name: KirinDL Android CI
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'app/**'
+      - 'buildSrc/**'
+      - 'gradle/**'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'gradle.properties'
+      - '.github/workflows/android_ci.yml'
   pull_request:
     branches:
       - main
@@ -52,3 +63,12 @@ jobs:
 
       - name: Compile Generic Debug
         run: ./gradlew assembleGenericDebug --stacktrace --no-daemon --no-configuration-cache
+
+      - name: Upload Debug APK for testing
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: KirinDLL-debug-${{ github.run_number }}
+          path: app/build/outputs/apk/generic/debug/**/*.apk
+          if-no-files-found: error
+          retention-days: 7
