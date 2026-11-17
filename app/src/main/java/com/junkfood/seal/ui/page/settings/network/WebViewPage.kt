@@ -331,6 +331,15 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                 },
                 actions = {
                     TextButton(onClick = {
+                        loadError = null
+                        mainWebView?.reload()
+                    }) { Text("Reload") }
+                    if (android.net.Uri.parse(websiteUrl).host in setOf("instagram.com", "www.instagram.com")) {
+                        TextButton(onClick = {
+                            mainWebView?.loadUrl("https://www.instagram.com/accounts/login/")
+                        }) { Text("Login") }
+                    }
+                    TextButton(onClick = {
                         cookieManager.flush()
                         onDismissRequest()
                     }) {
@@ -458,6 +467,13 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                                 super.onPageFinished(view, url)
                                 isLoading = false
                                 cookieManager.flush()
+                                view.postDelayed({
+                                    if (view.url == url && !isLoading) {
+                                        view.evaluateJavascript("Boolean(document.body && document.body.innerText.trim().length === 0 && !document.querySelector('input, img, video, canvas'))") { empty ->
+                                            if (empty == "true" && view.url == url) loadError = "Page is empty. Try Reload or Login."
+                                        }
+                                    }
+                                }, 5000L)
                             }
 
                             override fun shouldOverrideUrlLoading(
@@ -536,6 +552,8 @@ fun WebViewPage(cookiesViewModel: CookiesViewModel, onDismissRequest: () -> Unit
                                     ) {
                                         if (!url.isNullOrEmpty() && url != "about:blank") {
                                             mainWebView?.loadUrl(url)
+                                        } else {
+                                            return
                                         }
                                         // Destroy helper after capturing URL — avoid leak.
                                         // post() defers until after this callback returns
