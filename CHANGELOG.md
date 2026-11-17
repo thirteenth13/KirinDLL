@@ -3,6 +3,13 @@
 All notable changes (starting from v1.7.3) to stable releases will be documented in this file.
 
 <!-- KIRIN-AUTO-CHANGELOG:START -->
+## 2026-11-17
+
+### ✦ Recent changes
+
+- ui: report neutral Instagram profile extractor name (`7eb7dfb3`)
+- ui: keep Instagram engine implementation invisible to users (`730a0326`)
+
 ## 2026-11-15
 
 ### ✦ Recent changes
