@@ -297,6 +297,7 @@ fun GalleryDlPage(
                         clipboardText = { clipboard.getText()?.text.orEmpty() },
                         onUrlChanged = viewModel::updateUrl,
                         onCheck = viewModel::checkExtractor,
+                        onLoadMore = viewModel::loadMoreInstagramPosts,
                         onDownload = {
                             if (confirmBeforeDownload) {
                                 confirmAction = GalleryConfirmAction.DOWNLOAD
@@ -591,6 +592,7 @@ private fun GalleryDownloadTab(
     clipboardText: () -> String,
     onUrlChanged: (String) -> Unit,
     onCheck: () -> Unit,
+    onLoadMore: () -> Unit,
     onDownload: () -> Unit,
     onQueue: () -> Unit,
     onBatch: () -> Unit,
@@ -746,7 +748,15 @@ private fun GalleryDownloadTab(
             Button(onClick = onQueueSelectedPosts, enabled = selectedPostUrls.isNotEmpty()) {
                 Text("Queue selected (${selectedPostUrls.size})")
             }
-            Text("Only posts returned by the current preview are shown.", color = colors.muted, fontSize = 11.sp)
+            val info = state.preflightInfo
+            Text("${instagramPosts.size} posts shown", color = colors.muted, fontSize = 11.sp)
+            if (info?.className == "InstagramProfile" &&
+                instagramPosts.size < minOf(360, info.estimatedItemCount ?: 360)
+            ) {
+                OutlinedButton(onClick = onLoadMore, enabled = !state.isBusy) {
+                    Text("Load more posts")
+                }
+            }
         }
 
         GalleryStatusStrip(state = state, colors = colors)
