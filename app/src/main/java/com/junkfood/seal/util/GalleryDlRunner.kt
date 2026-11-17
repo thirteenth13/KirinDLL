@@ -83,7 +83,7 @@ object GalleryDlRunner {
             prefixedHttpUrl.matches(trimmed)
     }
 
-    suspend fun inspectUrl(context: Context, url: String): Result<ExtractorInfo> =
+    suspend fun inspectUrl(context: Context, url: String, previewLimit: Int = 36): Result<ExtractorInfo> =
         runMutex.withLock {
             withContext(Dispatchers.IO) {
                 runCatching {
@@ -98,7 +98,7 @@ object GalleryDlRunner {
                             ?.absolutePath.orEmpty()
                         val preview = runCatching {
                             JSONObject(getInstaloaderBridge(context)
-                                .callAttr("preview_profile", trimmedUrl, 36, instagramCookies)
+                                .callAttr("preview_profile", trimmedUrl, previewLimit, instagramCookies)
                                 .toString())
                         }.getOrNull()
                         if (preview != null && preview.optBoolean("ok", false)) {
@@ -112,6 +112,7 @@ object GalleryDlRunner {
                                 title = preview.optString("username"),
                                 author = preview.optString("username"),
                                 isCollection = true,
+                                estimatedItemCount = preview.optInt("total", items.size),
                                 scannedItemCount = items.size,
                                 cookiesLoaded = preview.optBoolean("authenticated", false),
                                 previewItems = items,
