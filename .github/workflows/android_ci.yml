@@ -61,14 +61,35 @@ jobs:
       - name: Run Generic Debug Unit Tests
         run: ./gradlew testGenericDebugUnitTest --stacktrace --no-daemon --no-configuration-cache
 
+      - name: Prepare shared signing key
+        if: github.event_name != 'pull_request'
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          umask 077
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            [[ -n "${!name:-}" ]] || { echo "::error::Missing signing secret $name"; exit 1; }
+          done
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$GITHUB_WORKSPACE/kirin-release.jks"
+          printf 'keyAlias=%s\nkeyPassword=%s\nstoreFile=../kirin-release.jks\nstorePassword=%s\n' "$ANDROID_KEY_ALIAS" "$ANDROID_KEY_PASSWORD" "$ANDROID_KEYSTORE_PASSWORD" > "$GITHUB_WORKSPACE/keystore.properties"
+
       - name: Compile Generic Debug
         run: ./gradlew assembleGenericDebug --stacktrace --no-daemon --no-configuration-cache
 
       - name: Upload Debug APK for testing
-        if: success()
+        if: success() && github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: KirinDLL-debug-${{ github.run_number }}
           path: app/build/outputs/apk/generic/debug/**/*.apk
           if-no-files-found: error
           retention-days: 7
+
+      - name: Remove signing material
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/kirin-release.jks" "$GITHUB_WORKSPACE/keystore.properties"
