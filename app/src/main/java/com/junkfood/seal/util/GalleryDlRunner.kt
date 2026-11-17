@@ -104,7 +104,7 @@ object GalleryDlRunner {
                                 baseCategory = "instagram",
                                 category = "instagram",
                                 subcategory = "user",
-                                className = "InstaloaderProfile",
+                                className = "InstagramProfile",
                                 title = preview.optString("username"),
                                 author = preview.optString("username"),
                                 isCollection = true,
