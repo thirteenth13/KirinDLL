@@ -7,6 +7,10 @@ All notable changes (starting from v1.7.3) to stable releases will be documented
 
 ### ✦ Recent changes
 
+- feat(instagram): expand profile preview on demand (`4338a2ad`)
+- feat(instagram): expand profile preview on demand (`1bcba9b7`)
+- feat(instagram): expand profile preview on demand (`31a2fc8e`)
+- feat(instagram): expand profile preview on demand (`6168c21a`)
 - feat(instagram): route selected post downloads through private engine with gallery fallback (`1291ac21`)
 - feat(instagram): download individual posts and carousel media into private job sandbox (`152f705f`)
 - feat(instagram): pass imported session cookies to private preview engine (`b76d2169`)
