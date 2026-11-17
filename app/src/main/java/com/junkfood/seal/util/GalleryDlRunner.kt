@@ -306,7 +306,22 @@ object GalleryDlRunner {
                                     }
                                 }
                             try {
-                                bridge.callAttr(
+                                val instagramResult = if (InstagramPostSelection.canonicalPostUrl(trimmedUrl) != null) {
+                                    val mediaFilter = when (GalleryDlBehaviorPreference.effectiveExportFilter(trimmedUrl)) {
+                                        GalleryDlBehaviorPreference.EXPORT_IMAGES -> "images"
+                                        GalleryDlBehaviorPreference.EXPORT_VIDEOS -> "videos"
+                                        else -> "media"
+                                    }
+                                    runCatching {
+                                        getInstaloaderBridge(context).callAttr(
+                                            "download_post", trimmedUrl, outputDir.absolutePath,
+                                            cookiesPath, mediaFilter,
+                                        ).toString()
+                                    }.getOrNull()?.takeIf {
+                                        runCatching { JSONObject(it).optBoolean("ok", false) }.getOrDefault(false)
+                                    }
+                                } else null
+                                instagramResult ?: bridge.callAttr(
                                         "download",
                                         trimmedUrl,
                                         outputDir.absolutePath,
