@@ -4,6 +4,7 @@ This bridge does not save credentials or download media. It returns post URLs
 and thumbnail metadata for the existing Compose selection grid.
 """
 import json
+from http.cookiejar import MozillaCookieJar
 import re
 from urllib.parse import urlsplit
 
@@ -40,8 +41,17 @@ def preview_profile(url, limit=36, cookies_path=""):
             compress_json=False,
             quiet=True,
         )
-        # Instaloader does not accept Netscape cookies.txt directly as a session.
-        # Do not claim cookies-based authentication unless it is explicitly implemented.
+        authenticated = False
+        if cookies_path:
+            jar = MozillaCookieJar(cookies_path)
+            jar.load(ignore_discard=True, ignore_expires=False)
+            for cookie in jar:
+                if cookie.domain.lstrip(".").lower() in ("instagram.com", "www.instagram.com"):
+                    loader.context._session.cookies.set_cookie(cookie)
+            username_session = loader.test_login()
+            if username_session:
+                loader.context.username = username_session
+                authenticated = True
         profile = instaloader.Profile.from_username(loader.context, username)
         items = []
         for post in profile.get_posts():
@@ -57,12 +67,12 @@ def preview_profile(url, limit=36, cookies_path=""):
                 "thumbnail": str(post.url),
                 "creator": username,
             })
-        return json.dumps({"ok": True, "username": username, "items": items, "authenticated": False})
+        return json.dumps({"ok": True, "username": username, "items": items, "authenticated": authenticated})
     except Exception as exc:
         return json.dumps({
             "ok": False,
             "username": username,
             "items": [],
             "authenticated": False,
-            "error": "%s: %s" % (type(exc).__name__, str(exc)),
+            "error": "Instagram profile unavailable (%s)" % type(exc).__name__,
         })
