@@ -7,6 +7,7 @@ All notable changes (starting from v1.7.3) to stable releases will be documented
 
 ### ✦ Recent changes
 
+- ci: require shared signing key for distributed debug APKs (`7746006e`)
 - ui: report neutral Instagram profile extractor name (`7eb7dfb3`)
 - ui: keep Instagram engine implementation invisible to users (`730a0326`)
 
