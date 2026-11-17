@@ -26,7 +26,7 @@ def _username(url):
 def preview_profile(url, limit=36, cookies_path=""):
     """Return JSON for a limited preview. No session or cookie files are persisted."""
     username = _username(url)
-    limit = max(1, min(int(limit), 60))
+    limit = max(1, min(int(limit), 360))
     try:
         import instaloader
 
@@ -53,9 +53,8 @@ def preview_profile(url, limit=36, cookies_path=""):
                 authenticated = True
         profile = instaloader.Profile.from_username(loader.context, username)
         items = []
-        for post in profile.get_posts():
-            if len(items) >= limit:
-                break
+        from itertools import islice
+        for post in islice(profile.get_posts(), limit):
             shortcode = str(post.shortcode)
             if not re.fullmatch(r"[A-Za-z0-9_-]+", shortcode):
                 continue
@@ -66,7 +65,7 @@ def preview_profile(url, limit=36, cookies_path=""):
                 "thumbnail": str(post.url),
                 "creator": username,
             })
-        return json.dumps({"ok": True, "username": username, "items": items, "authenticated": authenticated})
+        return json.dumps({"ok": True, "username": username, "items": items, "authenticated": authenticated, "total": profile.mediacount})
     except Exception as exc:
         return json.dumps({
             "ok": False,
