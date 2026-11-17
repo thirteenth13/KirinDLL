@@ -7,6 +7,7 @@ All notable changes (starting from v1.7.3) to stable releases will be documented
 
 ### ✦ Recent changes
 
+- ui: add explicit Instagram sign-in in Gallery settings (`6e317b5f`)
 - feat(instagram): expand profile preview on demand (`4338a2ad`)
 - feat(instagram): expand profile preview on demand (`1bcba9b7`)
 - feat(instagram): expand profile preview on demand (`31a2fc8e`)
