@@ -7,6 +7,7 @@ All notable changes (starting from v1.7.3) to stable releases will be documented
 
 ### ✦ Recent changes
 
+- feat(instagram): user-controlled in-app sign-in and local session save (`e4c35382`)
 - ui: add explicit Instagram sign-in in Gallery settings (`6e317b5f`)
 - feat(instagram): expand profile preview on demand (`4338a2ad`)
 - feat(instagram): expand profile preview on demand (`1bcba9b7`)
