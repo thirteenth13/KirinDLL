@@ -1,7 +1,6 @@
 """Bounded Instagram profile preview using Instaloader.
 
-This bridge does not save credentials or download media. It returns post URLs
-and thumbnail metadata for the existing Compose selection grid.
+The bridge returns preview metadata and downloads selected posts into a private job directory.
 """
 import json
 from http.cookiejar import MozillaCookieJar
@@ -76,3 +75,54 @@ def preview_profile(url, limit=36, cookies_path=""):
             "authenticated": False,
             "error": "Instagram profile unavailable (%s)" % type(exc).__name__,
         })
+
+
+def download_post(url, output_dir, cookies_path="", media_filter="media"):
+    import os
+    import shutil
+    import tempfile
+    from pathlib import Path
+
+    stage = None
+    try:
+        parts = urlsplit(url.strip())
+        segments = [p for p in parts.path.split("/") if p]
+        if (parts.scheme != "https" or parts.hostname not in ("instagram.com", "www.instagram.com")
+                or parts.username or parts.password or parts.port is not None
+                or len(segments) != 2 or segments[0] not in ("p", "reel", "tv")
+                or not re.fullmatch(r"[A-Za-z0-9_-]+", segments[1])):
+            return json.dumps({"ok": False, "error": "Invalid Instagram post URL"})
+        import instaloader
+        stage = Path(tempfile.mkdtemp(prefix="post-", dir=output_dir))
+        loader = instaloader.Instaloader(
+            dirname_pattern=str(stage), filename_pattern="{shortcode}",
+            download_pictures=media_filter != "videos",
+            download_videos=media_filter != "images",
+            download_video_thumbnails=False, download_geotags=False,
+            download_comments=False, save_metadata=False, compress_json=False,
+            post_metadata_txt_pattern="", quiet=True,
+            max_connection_attempts=2, request_timeout=30,
+        )
+        authenticated = False
+        if cookies_path:
+            jar = MozillaCookieJar(cookies_path)
+            jar.load(ignore_discard=True, ignore_expires=False)
+            for cookie in jar:
+                if cookie.domain.lstrip(".").lower() in ("instagram.com", "www.instagram.com"):
+                    loader.context._session.cookies.set_cookie(cookie)
+            account = loader.test_login()
+            if account:
+                loader.context.username = account
+                authenticated = True
+        post = instaloader.Post.from_shortcode(loader.context, segments[1])
+        loader.download_post(post, target=str(stage))
+        files = [str(p.resolve()) for p in stage.rglob("*")
+                 if p.is_file() and p.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp", ".mp4")]
+        if not files:
+            raise ValueError("No matching media")
+        return json.dumps({"ok": True, "files": files, "extractor": "instagram / post",
+                           "cookies_loaded": authenticated, "config_loaded": False})
+    except Exception as exc:
+        if stage is not None:
+            shutil.rmtree(stage, ignore_errors=True)
+        return json.dumps({"ok": False, "error": "Instagram download unavailable (%s)" % type(exc).__name__})
