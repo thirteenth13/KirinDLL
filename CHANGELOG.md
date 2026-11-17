@@ -3,6 +3,12 @@
 All notable changes (starting from v1.7.3) to stable releases will be documented in this file.
 
 <!-- KIRIN-AUTO-CHANGELOG:START -->
+## 2026-11-18
+
+### ✦ Recent changes
+
+- fix(webview): retain login popup until navigation and expose reload and blank-page diagnostics (`d2e95835`)
+
 ## 2026-11-17
 
 ### ✦ Recent changes
