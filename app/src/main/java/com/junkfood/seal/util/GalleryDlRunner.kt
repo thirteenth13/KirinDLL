@@ -93,11 +93,15 @@ object GalleryDlRunner {
                     }
 
                     if (InstagramProfileRouting.isProfileUrl(trimmedUrl)) {
-                        val rawPreview = getInstaloaderBridge(context)
-                            .callAttr("preview_profile", trimmedUrl, 36, "")
-                            .toString()
-                        val preview = JSONObject(rawPreview)
-                        if (preview.optBoolean("ok", false)) {
+                        val instagramCookies = GalleryDlConfig.prepare(context).cookiesFile
+                            .takeIf { it.isFile && it.length() > 0L }
+                            ?.absolutePath.orEmpty()
+                        val preview = runCatching {
+                            JSONObject(getInstaloaderBridge(context)
+                                .callAttr("preview_profile", trimmedUrl, 36, instagramCookies)
+                                .toString())
+                        }.getOrNull()
+                        if (preview != null && preview.optBoolean("ok", false)) {
                             val items = parsePreviewItems(preview.optJSONArray("items"))
                             return@runCatching ExtractorInfo(
                                 supported = true,
@@ -109,6 +113,7 @@ object GalleryDlRunner {
                                 author = preview.optString("username"),
                                 isCollection = true,
                                 scannedItemCount = items.size,
+                                cookiesLoaded = preview.optBoolean("authenticated", false),
                                 previewItems = items,
                                 preflightStatus = "ready",
                             )
