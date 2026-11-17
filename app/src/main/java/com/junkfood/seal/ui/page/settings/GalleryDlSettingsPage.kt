@@ -62,6 +62,7 @@ fun GalleryDlSettingsPage(
     val expertConfigEnabled by
         GalleryDlBehaviorPreference.expertConfigEnabled.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    var showInstagramLogin by remember { mutableStateOf(false) }
     var showYtdlpSettings by remember { mutableStateOf(false) }
     var showExportFilterDialog by remember { mutableStateOf(false) }
 
@@ -175,6 +176,11 @@ fun GalleryDlSettingsPage(
                 title = "Cookies",
                 description = "Optional Netscape cookies.txt for your existing site sessions.",
             ) {
+                OutlinedButton(
+                    onClick = { showInstagramLogin = true },
+                    enabled = !state.isBusy,
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text("Sign in to Instagram") }
                 Text(
                     if (state.cookiesImported) {
                         "cookies.txt ready (${state.cookiesSize} bytes)"
@@ -323,6 +329,13 @@ fun GalleryDlSettingsPage(
             }
             Spacer(Modifier.height(24.dp))
         }
+    }
+
+    if (showInstagramLogin) {
+        InstagramLoginDialog(onDismiss = { showInstagramLogin = false }, onSaved = {
+            showInstagramLogin = false
+            viewModel.refreshFromDisk()
+        })
     }
 
     if (showYtdlpSettings) {
