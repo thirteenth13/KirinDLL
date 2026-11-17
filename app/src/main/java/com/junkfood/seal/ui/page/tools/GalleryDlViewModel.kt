@@ -542,7 +542,15 @@ class GalleryDlViewModel : ViewModel() {
         }
     }
 
-    fun checkExtractor() {
+    fun checkExtractor() = checkExtractorWithLimit(36, false)
+
+    fun loadMoreInstagramPosts() {
+        val info = mutableState.value.preflightInfo ?: return
+        if (info.className != "InstagramProfile") return
+        checkExtractorWithLimit((info.previewItems.size + 36).coerceAtMost(360), true)
+    }
+
+    private fun checkExtractorWithLimit(limit: Int, keepPreview: Boolean) {
         val current = mutableState.value
         if (current.isBusy || !current.isInstalled || !GalleryDlRunner.isCandidateUrl(current.url)) return
 
@@ -551,21 +559,21 @@ class GalleryDlViewModel : ViewModel() {
                 isCheckingExtractor = true,
                 extractorSupported = null,
                 extractorLabel = null,
-                preflightInfo = null,
+                preflightInfo = if (keepPreview) current.preflightInfo else null,
                 errorMessage = null,
                 statusMessage = null,
             )
         }
 
         viewModelScope.launch(Dispatchers.IO) {
-            GalleryDlRunner.inspectUrl(App.context, current.url)
+            GalleryDlRunner.inspectUrl(App.context, current.url, limit)
                 .onSuccess { info ->
                     mutableState.update {
                         it.copy(
                             isCheckingExtractor = false,
                             extractorSupported = info.supported,
                             extractorLabel = info.label.takeIf(String::isNotBlank),
-                            preflightInfo = info,
+                            preflightInfo = if (keepPreview && info.previewItems.size < (current.preflightInfo?.previewItems?.size ?: 0)) current.preflightInfo else info,
                             statusMessage =
                                 if (info.supported && info.preflightStatus == "ready") {
                                     "Preflight ready: ${info.label}"
@@ -588,7 +596,7 @@ class GalleryDlViewModel : ViewModel() {
                         it.copy(
                             isCheckingExtractor = false,
                             extractorSupported = false,
-                            preflightInfo = null,
+                            preflightInfo = if (keepPreview) current.preflightInfo else null,
                             errorMessage = error.message ?: "Could not check this URL",
                         )
                     }
